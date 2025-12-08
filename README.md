@@ -1,1 +1,31 @@
-# CatchBondSMFS
+# SMFS data analysis code for the manuscript "Neighbouring group participation hindered by force: A molecular design for covalent catch bonds"
+MATLAB scripts used for importing, correcting, sorting and binning data from single-molecule force spectroscopy measurements
+The scripts included here were used to process the measurement data from exported text files to a set of force-dependent bond decay curves. The data obtained from these scripts was then imported in OriginLab for further data fitting and plotting.
+
+## System information and requirements
+The code provided here was written and executed in MATLAB® version R2020a, and includes functionalities from the Curve Fitting Toolbox™ and the Signal Processing Toolbox™. No further installation is required. Runtime for SMFS_ManualImport_V2.m is approximately between 1 and 5 minutes; scripts with a graphical user interface are limited by the speed of the user. The other scripts run in several seconds.
+
+## Example data
+The example data provided is a subset of SMFS measurements performed on one sample, at one location, at one target force, over a period of 35 minutes. 25 measurements from the 504 originally present in this subset are provided as test data. The calibrated force and height data were exported as .txt files without further processing. One of these files, ‘force-save-2023.03.23-14.31.01.083.txt’, was used for the example curves in the main text.
+
+## Description of and instructions for individual scripts
+### SMFS_ManualImport_V2.m
+This script browses all text files in a given folder (which can be set in line 5 by changing the variable datop.location), imports the files for which block 3 (retraction to a specified force) does not reach the maximum number of datapoints in order to filter out most of the events in which no bond is formed, and saves the data in a cell array called Data (name of the saved file is specified in line 7). Two other that are set are the maximum number of datapoints per block (datop.datapoints) and the number of columns for each individual block (datop.nCol). These follow from the specific measurement settings.
+### SMFS_ManualSelect_V3.m
+Running this function with the variables from the previous script available in the workspace opens a graphical user interface that iterates through the imported measurements. For each measurement, three graphs are plotted (force-height, force-time, and height-time). Five buttons are available to sort the measurements: ‘Valid single event’; ‘No bond formed’; ‘Single bond broke in retraction’; ‘Multiple bonds formed’; and ‘Other or unknown’. Pressing one of these buttons assigns that string to the measurement in the output variable guiManvalid and plots the graphs for the next measurement.
+### SMFS_normmanvalid_V3.m
+This script removes the force-height dependence away from the sample by fitting a straight line through the first 90% of block 1 (approach to the sample) and subtracting this baseline for measured forces in all blocks. The baseline-corrected data is saved in a cell array called Datcorr. Figures are plotted (if specified in line 4) to quickly visualize the normalization.
+### SMFS_findforceUI_V2.m
+This function tries to automatically find a restoring force and lifetime for each event marked as valid and incorporates a graphical user interface to allow for manual corrections. The function requires four input variables: the baseline-corrected data cell array (Datcorr), the sampling frequency used in block 4 (in this case, up to 16384 measurements in 30 seconds), the lowpass filter frequency (see below; a value of 10 Hz was used in all our analyses), and the datop variable that contains all other parameters from earlier scripts. This function should be called using the syntax:
+[Fres,tau] = SMFS_findforceUI_V2(datObj.Datcorr, 16384/30,10, datop);
+This user interface iterates through all valid events and plots the force-time curve twice and the height-time curve once. As a guess for the event, the script applies a lowpass Fourier filter to the force-time data to remove noise and calculates the first derivative. The position where the first derivative has the largest (positive) value is marked as the detected event. The force is averaged over the range from 15 datapoints before the event and 5 data points before the event to obtain the force before the event, and over the range from 5 data points after the event to 15 data points after the event to obtain the force after the event. The difference between these values is reported as the restoring force. The values for the automatically determined lifetime and force are displayed in the graphical user interface and the second and third displayed graphs are zoomed in to the event. The user can either accept the values for this event by pressing the ‘Accept event’ button, or manually select a different region in the first graph. To do this, the user should press the button ‘Manually select zone’, which enables a selection brush that can be used to mark a group of data points in the first graph. Data points just before the visually identified event should be selected here. Then, the user should press the new button (‘Select data points before event and click here’) and select a group of data points just after the visually identified event. The force before and after event is averaged over the selected data points and the lifetime is determined by finding the maximum derivative of the measured force between the two selected regions.
+### exportft.m
+From a group of extracted forces in an array F_ev and the corresponding extracted lifetimes tau_ev, typically combined from multiple measurements, this function bins the data in force bins of equal size (here set to 5E-11, i.e. 50 pN). For each individual bin it then converts each event to the corresponding fraction of intact connections. Finally it plots the fraction of intact connections as a function of time for each force bin. This function should be called using the syntax:
+```matlab
+[edges,values,frac,time] = exportft(F_ev,tau_ev,binsize)
+```
+### exportftthresh.m
+Similar to the function above, but includes an additional threshold input that can be used to ignore measurements in which dissociation occurs within a specified time (0.2 s in the analyses reported here). This function should be called using the syntax:
+```matlab
+[edges,values,frac,time] = expftthresh(F_ev,tau_ev,binsize,threshold)
+```
