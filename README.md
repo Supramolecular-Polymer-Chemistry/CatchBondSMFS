@@ -1,6 +1,7 @@
 # SMFS data analysis code for the manuscript "Neighbouring group participation hindered by force: A molecular design for covalent catch bonds"
 MATLAB scripts used for importing, correcting, sorting and binning data from single-molecule force spectroscopy measurements
 The scripts included here were used to process the measurement data from exported text files to a set of force-dependent bond decay curves. The data obtained from these scripts was then imported in OriginLab for further data fitting and plotting.
+Manuscript DOI: 10.1038/s41467-026-73312-9
 
 ## System information and requirements
 The code provided here was written and executed in MATLAB® version R2020a, and includes functionalities from the Curve Fitting Toolbox™ and the Signal Processing Toolbox™. No further installation is required. Runtime for SMFS_ManualImport_V2.m is approximately between 1 and 5 minutes; scripts with a graphical user interface are limited by the speed of the user. The other scripts run in several seconds.
